@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/arpwal/contactsmanager-ios.git",
       "state" : {
-        "revision" : "ef11d44fc6f0fce335131c531e5ce37fb717a94a",
-        "version" : "0.12.0"
+        "revision" : "bef15d7cd097502c6072d13bad9c149e94e9dfd8",
+        "version" : "0.13.0"
       }
     }
   ],
