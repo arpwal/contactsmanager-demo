@@ -1,0 +1,15 @@
+{
+  "originHash" : "30ae786601dac4ae70a40ef493b178ca58524072577c7dbd304d6f63a865f03b",
+  "pins" : [
+    {
+      "identity" : "contactsmanager-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/arpwal/contactsmanager-ios.git",
+      "state" : {
+        "revision" : "ef11d44fc6f0fce335131c531e5ce37fb717a94a",
+        "version" : "0.12.0"
+      }
+    }
+  ],
+  "version" : 3
+}

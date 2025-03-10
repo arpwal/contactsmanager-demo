@@ -6,12 +6,8 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		FCD09F352D7F676500B04F2F /* ContactsManagerBinary in Frameworks */ = {isa = PBXBuildFile; productRef = FCD09F342D7F676500B04F2F /* ContactsManagerBinary */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXFileReference section */
-		FC9918782D78F0FC00E950FD /* ContactsManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ContactsManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FC9918782D78F0FC00E950FD /* ContactsManagerDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ContactsManagerDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -27,7 +23,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FCD09F352D7F676500B04F2F /* ContactsManagerBinary in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -45,7 +40,7 @@
 		FC9918792D78F0FC00E950FD /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FC9918782D78F0FC00E950FD /* ContactsManager.app */,
+				FC9918782D78F0FC00E950FD /* ContactsManagerDemo.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -53,9 +48,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		FC9918772D78F0FC00E950FD /* ContactsManager */ = {
+		FC9918772D78F0FC00E950FD /* ContactsManagerDemo */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = FC9918862D78F0FD00E950FD /* Build configuration list for PBXNativeTarget "ContactsManager" */;
+			buildConfigurationList = FC9918862D78F0FD00E950FD /* Build configuration list for PBXNativeTarget "ContactsManagerDemo" */;
 			buildPhases = (
 				FC9918742D78F0FC00E950FD /* Sources */,
 				FC9918752D78F0FC00E950FD /* Frameworks */,
@@ -68,12 +63,11 @@
 			fileSystemSynchronizedGroups = (
 				FC99187A2D78F0FC00E950FD /* ContactsManagerDemo */,
 			);
-			name = ContactsManager;
+			name = ContactsManagerDemo;
 			packageProductDependencies = (
-				FCD09F342D7F676500B04F2F /* ContactsManagerBinary */,
 			);
 			productName = ContactsManagerDemo;
-			productReference = FC9918782D78F0FC00E950FD /* ContactsManager.app */;
+			productReference = FC9918782D78F0FC00E950FD /* ContactsManagerDemo.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -91,7 +85,7 @@
 					};
 				};
 			};
-			buildConfigurationList = FC9918732D78F0FC00E950FD /* Build configuration list for PBXProject "ContactsManager" */;
+			buildConfigurationList = FC9918732D78F0FC00E950FD /* Build configuration list for PBXProject "ContactsManagerDemo" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -101,14 +95,13 @@
 			mainGroup = FC99186F2D78F0FC00E950FD;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				FCD09F332D7F676500B04F2F /* XCLocalSwiftPackageReference "../../ios-package" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FC9918792D78F0FC00E950FD /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				FC9918772D78F0FC00E950FD /* ContactsManager */,
+				FC9918772D78F0FC00E950FD /* ContactsManagerDemo */,
 			);
 		};
 /* End PBXProject section */
@@ -326,7 +319,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		FC9918732D78F0FC00E950FD /* Build configuration list for PBXProject "ContactsManager" */ = {
+		FC9918732D78F0FC00E950FD /* Build configuration list for PBXProject "ContactsManagerDemo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FC9918842D78F0FD00E950FD /* Debug */,
@@ -335,7 +328,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FC9918862D78F0FD00E950FD /* Build configuration list for PBXNativeTarget "ContactsManager" */ = {
+		FC9918862D78F0FD00E950FD /* Build configuration list for PBXNativeTarget "ContactsManagerDemo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FC9918872D78F0FD00E950FD /* Debug */,
@@ -345,20 +338,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCLocalSwiftPackageReference section */
-		FCD09F332D7F676500B04F2F /* XCLocalSwiftPackageReference "../../ios-package" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = "../../ios-package";
-		};
-/* End XCLocalSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		FCD09F342D7F676500B04F2F /* ContactsManagerBinary */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = ContactsManagerBinary;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = FC9918702D78F0FC00E950FD /* Project object */;
 }

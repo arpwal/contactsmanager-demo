@@ -1,3 +1,10 @@
+//
+//  ContentView.swift
+//  ContactsManagerDemo
+//
+//  Created by Arpit Agarwal on 3/5/25.
+//
+
 import SwiftUI
 import Contacts
 

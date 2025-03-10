@@ -1,5 +1,12 @@
+//
+//  ContentView.swift
+//  ContactsManagerDemo
+//
+//  Created by Arpit Agarwal on 3/5/25.
+//
+
 import SwiftUI
-import ContactsManagerBinary
+import ContactsManager
 
 // Basic Information Section
 private struct BasicInfoSection: View {

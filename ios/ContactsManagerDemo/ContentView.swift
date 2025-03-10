@@ -6,7 +6,7 @@
 //
 
 import Contacts
-import ContactsManagerBinary
+import ContactsManager
 import SwiftUI
 import Combine
 
@@ -103,7 +103,7 @@ struct ContentView: View {
         Task {
             do {
                 // Initialize with a demo API key (replace with your actual key)
-                try await ContactsManager.shared.initialize(
+                try await ContactsService.shared.initialize(
                     withAPIKey: "demo_api_key_12345678901234567890123456789012"
                 )
             } catch {
