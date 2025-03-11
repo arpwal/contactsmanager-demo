@@ -15,9 +15,22 @@
 		FC9918782D78F0FC00E950FD /* ContactsManagerDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ContactsManagerDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		FC96E9BD2D801112000BA7FD /* Exceptions for "ContactsManagerDemo" folder in "ContactsManagerDemo" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = FC9918772D78F0FC00E950FD /* ContactsManagerDemo */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		FC99187A2D78F0FC00E950FD /* ContactsManagerDemo */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				FC96E9BD2D801112000BA7FD /* Exceptions for "ContactsManagerDemo" folder in "ContactsManagerDemo" target */,
+			);
 			path = ContactsManagerDemo;
 			sourceTree = "<group>";
 		};
@@ -267,6 +280,7 @@
 				DEVELOPMENT_TEAM = 2C87X9VM3V;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ContactsManagerDemo/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Rolodex;
 				INFOPLIST_KEY_NSContactsUsageDescription = "We need access to your contacts to demo the ContactsManager SDK";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -302,6 +316,7 @@
 				DEVELOPMENT_TEAM = 2C87X9VM3V;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ContactsManagerDemo/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Rolodex;
 				INFOPLIST_KEY_NSContactsUsageDescription = "We need access to your contacts to demo the ContactsManager SDK";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
