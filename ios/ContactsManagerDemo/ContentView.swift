@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var errorMessage: String?
     @State private var showContactCreation = false
     @State private var showDangerousActionSheet = false
+    @State private var contactsAccessStatus: ContactsAccessStatus = .notDetermined
     
     // Check if running on simulator
     private var isSimulator: Bool {
@@ -29,6 +30,29 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
+                // Show authorization status if not authorized
+                if contactsAccessStatus != .authorized {
+                    VStack(spacing: 16) {
+                        Text("Contacts Access Required")
+                            .font(.headline)
+                        
+                        Button(action: requestContactsAccess) {
+                            HStack {
+                                Image(systemName: "lock.open")
+                                Text("Request Contacts Access")
+                            }
+                            .font(.headline)
+                            .padding()
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .background(Color.green)
+                            .cornerRadius(10)
+                        }
+                        .padding(.horizontal)
+                    }
+                    .padding(.vertical, 20)
+                }
+                
                 // Show selected contacts if any
                 if !selectedContacts.isEmpty {
                     List(selectedContacts, id: \.id) { contact in
@@ -43,25 +67,29 @@ struct ContentView: View {
                 }
                 
                 // Select Contacts Button
-                Button(action: showContactPicker) {
-                    HStack {
-                        Image(systemName: "person.crop.circle.badge.plus")
-                        Text("Select Contacts")
+                if contactsAccessStatus == .authorized {
+                    Button(action: showContactPicker) {
+                        HStack {
+                            Image(systemName: "person.crop.circle.badge.plus")
+                            Text("Select Contacts")
+                        }
+                        .font(.headline)
+                        .padding()
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.blue)
+                        .cornerRadius(10)
                     }
-                    .font(.headline)
                     .padding()
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.blue)
-                    .cornerRadius(10)
                 }
-                .padding()
             }
             .navigationTitle("Contacts Demo")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: handleCreateContactsTap) {
-                        Image(systemName: "person.crop.circle.badge.plus.fill")
+                    if contactsAccessStatus == .authorized {
+                        Button(action: handleCreateContactsTap) {
+                            Image(systemName: "person.crop.circle.badge.plus.fill")
+                        }
                     }
                 }
             }
@@ -87,6 +115,10 @@ struct ContentView: View {
             }
             .onAppear {
                 initializeContactsManager()
+                updateContactsAccessStatus()
+            }
+            .onContactsManagerEvent(.contactsAccessChanged, identifier: "ContentView") {
+                updateContactsAccessStatus()
             }
         }
     }
@@ -144,6 +176,26 @@ struct ContentView: View {
                 }
             }
         }
+    }
+    
+    private func requestContactsAccess() {
+        Task {
+            if await ContactsService.shared.requestContactsAccess() {
+                await MainActor.run {
+                    updateContactsAccessStatus()
+                }
+            } else {
+                await MainActor.run {
+                    errorMessage = "Failed to get contacts access"
+                    showError = true
+                }
+            }
+        }
+    }
+    
+    private func updateContactsAccessStatus() {
+        let newStatus = ContactsService.shared.contactsAccessStatus
+        contactsAccessStatus = newStatus
     }
 }
 

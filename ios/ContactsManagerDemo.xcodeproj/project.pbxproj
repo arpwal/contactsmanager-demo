@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		FC96E9B92D800137000BA7FD /* ContactsManager in Frameworks */ = {isa = PBXBuildFile; productRef = FC96E9B82D800137000BA7FD /* ContactsManager */; };
+		FC96E9C02D80BAB1000BA7FD /* ContactsManager in Frameworks */ = {isa = PBXBuildFile; productRef = FC96E9BF2D80BAB1000BA7FD /* ContactsManager */; };
 		FCD50DFD2D7FAB1400208196 /* ContactsManager in Frameworks */ = {isa = PBXBuildFile; productRef = FCD50DFC2D7FAB1400208196 /* ContactsManager */; };
 /* End PBXBuildFile section */
 
@@ -42,7 +42,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FCD50DFD2D7FAB1400208196 /* ContactsManager in Frameworks */,
-				FC96E9B92D800137000BA7FD /* ContactsManager in Frameworks */,
+				FC96E9C02D80BAB1000BA7FD /* ContactsManager in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -86,7 +86,7 @@
 			name = ContactsManagerDemo;
 			packageProductDependencies = (
 				FCD50DFC2D7FAB1400208196 /* ContactsManager */,
-				FC96E9B82D800137000BA7FD /* ContactsManager */,
+				FC96E9BF2D80BAB1000BA7FD /* ContactsManager */,
 			);
 			productName = ContactsManagerDemo;
 			productReference = FC9918782D78F0FC00E950FD /* ContactsManagerDemo.app */;
@@ -117,7 +117,7 @@
 			mainGroup = FC99186F2D78F0FC00E950FD;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				FC96E9B72D800137000BA7FD /* XCRemoteSwiftPackageReference "contactsmanager-ios" */,
+				FC96E9BE2D80BAB1000BA7FD /* XCLocalSwiftPackageReference "../../ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FC9918792D78F0FC00E950FD /* Products */;
@@ -364,21 +364,16 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		FC96E9B72D800137000BA7FD /* XCRemoteSwiftPackageReference "contactsmanager-ios" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/arpwal/contactsmanager-ios.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.1.0;
-			};
+/* Begin XCLocalSwiftPackageReference section */
+		FC96E9BE2D80BAB1000BA7FD /* XCLocalSwiftPackageReference "../../ios" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../ios;
 		};
-/* End XCRemoteSwiftPackageReference section */
+/* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		FC96E9B82D800137000BA7FD /* ContactsManager */ = {
+		FC96E9BF2D80BAB1000BA7FD /* ContactsManager */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = FC96E9B72D800137000BA7FD /* XCRemoteSwiftPackageReference "contactsmanager-ios" */;
 			productName = ContactsManager;
 		};
 		FCD50DFC2D7FAB1400208196 /* ContactsManager */ = {
