@@ -83,7 +83,7 @@ struct ContentView: View {
                     .padding()
                 }
             }
-            .navigationTitle("Contacts Demo")
+            .navigationTitle("Rolodex")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     if contactsAccessStatus == .authorized {
@@ -134,10 +134,24 @@ struct ContentView: View {
     private func initializeContactsManager() {
         Task {
             do {
-                // Initialize with a demo API key (replace with your actual key)
+                // Get API key from configuration or use fallback
+                // You can replace this with your actual API key if xcconfig isn't working
+                let apiKey = ConfigurationManager.shared.apiKey
+                
                 try await ContactsService.shared.initialize(
-                    withAPIKey: "demo_api_key_12345678901234567890123456789012"
+                    withAPIKey: apiKey,
+                    userId: "12345676890"
                 )
+            } catch let error as ContactsServiceError {
+                await MainActor.run {
+                    // Enhanced error message for invalid API key
+                    if case .invalidAPIKey = error {
+                        errorMessage = "Invalid API key. Register for free at ContactsManager.io to get your own API key."
+                    } else {
+                        errorMessage = error.localizedDescription
+                    }
+                    showError = true
+                }
             } catch {
                 await MainActor.run {
                     errorMessage = error.localizedDescription

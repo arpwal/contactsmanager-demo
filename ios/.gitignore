@@ -94,3 +94,11 @@ iOSInjectionProject/
 .AppleDouble
 .LSOverride
 ._*
+
+# Local configuration file
+ContactsManagerDemo/Config.xcconfig
+ContactsManagerDemo/Config.xcconfig
+
+# Local configuration file
+ContactsManagerDemo/Config.local.xcconfig
+
