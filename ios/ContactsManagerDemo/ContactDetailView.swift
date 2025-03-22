@@ -195,19 +195,11 @@ private struct AdditionalInfoSection: View {
 }
 
 // Education and Interests Sections
-private struct EducationAndInterestsSection: View {
+private struct InterestsSection: View {
     let contact: Contact
     
     var body: some View {
         Group {
-            if !contact.education.isEmpty {
-                Section("Education") {
-                    ForEach(contact.education, id: \.id) { edu in
-                        Text(edu.display())
-                    }
-                }
-            }
-            
             if !contact.interests.isEmpty {
                 Section("Interests") {
                     ForEach(contact.interests, id: \.self) { interest in
@@ -235,7 +227,7 @@ struct ContactDetailView: View {
                 AddressSection(contact: contact)
                 SocialProfilesSection(contact: contact)
                 AdditionalInfoSection(contact: contact)
-                EducationAndInterestsSection(contact: contact)
+                InterestsSection(contact: contact)
             }
             .navigationTitle("Contact Details")
             .navigationBarTitleDisplayMode(.inline)
