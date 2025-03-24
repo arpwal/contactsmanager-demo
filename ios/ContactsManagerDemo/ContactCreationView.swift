@@ -12,6 +12,7 @@ struct ContactCreationView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedCount = 10
     @State private var isCreating = false
+    @State private var isDeleting = false
     @State private var showError = false
     @State private var errorMessage: String?
     
@@ -37,6 +38,10 @@ struct ContactCreationView: View {
                     ProgressView("Creating contacts...")
                         .progressViewStyle(.circular)
                         .scaleEffect(1.5)
+                } else if isDeleting {
+                    ProgressView("Deleting contacts...")
+                        .progressViewStyle(.circular)
+                        .scaleEffect(1.5)
                 } else {
                     Button(action: createContacts) {
                         Text("Create Contacts")
@@ -47,7 +52,18 @@ struct ContactCreationView: View {
                             .background(Color.blue)
                             .cornerRadius(10)
                     }
-                    .padding()
+                    .padding(.horizontal)
+                    
+                    Button(action: deleteAllContacts) {
+                        Text("Delete All Created Contacts")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.red)
+                            .cornerRadius(10)
+                    }
+                    .padding(.horizontal)
                 }
                 
                 Spacer()
@@ -97,9 +113,9 @@ struct ContactCreationView: View {
                     let batchSize = endIndex - startIndex
                     
                     // Create a batch of contacts
-                    for i in 0..<batchSize {
+                    for contactIndex in 0..<batchSize {
                         let contact = CNMutableContact()
-                        let number = startIndex + i + 1
+                        let number = startIndex + contactIndex + 1
                         
                         // Set basic contact information
                         contact.givenName = "Contact"
@@ -134,6 +150,70 @@ struct ContactCreationView: View {
             } catch {
                 await MainActor.run {
                     isCreating = false
+                    errorMessage = error.localizedDescription
+                    showError = true
+                }
+            }
+        }
+    }
+    
+    private func deleteAllContacts() {
+        isDeleting = true
+        
+        Task {
+            do {
+                let store = CNContactStore()
+                
+                // Request access if needed
+                let status = CNContactStore.authorizationStatus(for: .contacts)
+                if status == .notDetermined {
+                    let granted = try await store.requestAccess(for: .contacts)
+                    if !granted {
+                        throw NSError(domain: "ContactsManager", code: 1, userInfo: [NSLocalizedDescriptionKey: "Contacts access denied"])
+                    }
+                } else if status != .authorized {
+                    throw NSError(domain: "ContactsManager", code: 1, userInfo: [NSLocalizedDescriptionKey: "Contacts access denied"])
+                }
+                
+                // Create a predicate to find contacts with givenName "Contact"
+                let predicate = CNContact.predicateForContacts(matchingName: "Contact")
+                let keysToFetch = [CNContactGivenNameKey, CNContactFamilyNameKey, CNContactIdentifierKey] as [CNKeyDescriptor]
+                
+                // Fetch matching contacts
+                let contacts = try store.unifiedContacts(matching: predicate, keysToFetch: keysToFetch)
+                
+                // Delete contacts in batches
+                let batchSize = 50
+                let totalContacts = contacts.count
+                let totalBatches = (totalContacts + batchSize - 1) / batchSize
+                
+                for batch in 0..<totalBatches {
+                    let startIndex = batch * batchSize
+                    let endIndex = min(startIndex + batchSize, totalContacts)
+                    
+                    let deleteRequest = CNSaveRequest()
+                    
+                    for index in startIndex..<endIndex {
+                        let contact = contacts[index]
+                        // Double check the contact has our expected naming format
+                        if contact.givenName == "Contact" {
+                            if let mutableContact = contact.mutableCopy() as? CNMutableContact {
+                                deleteRequest.delete(mutableContact)
+                            }
+                        }
+                    }
+                    
+                    try store.execute(deleteRequest)
+                }
+                
+                // Update UI on main thread
+                await MainActor.run {
+                    isDeleting = false
+                }
+                
+            } catch {
+                await MainActor.run {
+                    isDeleting = false
                     errorMessage = error.localizedDescription
                     showError = true
                 }
