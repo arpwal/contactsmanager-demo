@@ -162,15 +162,10 @@ struct ContactsRecommendationsView: View {
       }
     }
     
-    // Using consistent sample IDs for demo - replace with actual IDs in production
-    let sampleCanonicalId = UUID(uuidString: "E621E1F8-C36C-495A-93FC-0C247A3E6E5F")!
-    let sampleOrgId = UUID(uuidString: "F621E1F8-C36C-495A-93FC-0C247A3E6E5F")!
-    
     // Load each type of recommendation concurrently
-    async let invitesTask = loadInviteRecommendations(
-      canonicalId: sampleCanonicalId, orgId: sampleOrgId)
+    async let invitesTask = loadInviteRecommendations()
     async let nearbyTask = loadNearbyContacts()
-    async let appUsersTask = loadAppUsers(orgId: sampleOrgId)
+    async let appUsersTask = loadAppUsers()
     
     // Wait for all tasks to complete
     await (_, _, _) = (invitesTask, nearbyTask, appUsersTask)
@@ -180,7 +175,7 @@ struct ContactsRecommendationsView: View {
     }
   }
   
-  private func loadInviteRecommendations(canonicalId: UUID, orgId: UUID) async {
+  private func loadInviteRecommendations() async {
     print("Loading invite recommendations")
     
     // Set loading state on main thread
@@ -190,8 +185,6 @@ struct ContactsRecommendationsView: View {
     
     do {
       let recommendations = try await ContactsService.shared.getRecommendedContactsToInvite(
-        canonicalContactId: canonicalId,
-        organizationId: orgId,
         limit: 30
       )
       
@@ -242,7 +235,7 @@ struct ContactsRecommendationsView: View {
     }
   }
   
-  private func loadAppUsers(orgId: UUID) async {
+  private func loadAppUsers() async {
     print("Loading app users")
     
     // Set loading state on main thread
@@ -252,7 +245,6 @@ struct ContactsRecommendationsView: View {
     
     do {
       let users = try await ContactsService.shared.getContactsUsingApp(
-        organizationId: orgId,
         limit: 30
       )
       
