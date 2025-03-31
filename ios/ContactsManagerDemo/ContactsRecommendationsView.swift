@@ -1,0 +1,388 @@
+import Combine
+import ContactsManager
+import SwiftUI
+
+struct ContactsRecommendationsView: View {
+  @State private var inviteRecommendations: [ContactRecommendation] = []
+  @State private var nearbyContacts: [ContactRecommendation] = []
+  @State private var appUsers: [ContactRecommendation] = []
+  @State private var isLoadingInvites = false
+  @State private var isLoadingNearby = false
+  @State private var isLoadingAppUsers = false
+  @State private var showError = false
+  @State private var errorMessage: String?
+  @State private var isInitializing = false
+  
+  // Track if data has been loaded at least once
+  @State private var initialLoadCompleted = false
+  
+  // States for navigation
+  @State private var showingNearbyList = false
+  @State private var showingAppUsersList = false
+  @State private var showingRecommendedList = false
+  
+  var body: some View {
+    NavigationView {
+      Group {
+        if isInitializing {
+          ProgressView("Initializing Service...")
+        } else if isLoadingInvites && isLoadingNearby && isLoadingAppUsers && !initialLoadCompleted {
+          ProgressView("Loading Recommendations...")
+        } else {
+          ScrollView {
+            VStack(spacing: 20) {
+              // Nearby Contacts Card
+              RecommendationCard(
+                title: "Nearby Contacts",
+                description: "People close to your current location",
+                icon: "location.fill",
+                isLoading: isLoadingNearby,
+                isEmpty: nearbyContacts.isEmpty,
+                items: nearbyContacts.prefix(3).map { $0.contact.displayName ?? "No Name" },
+                action: { showingNearbyList = true }
+              )
+              
+              // App Users Card
+              RecommendationCard(
+                title: "App Users",
+                description: "Contacts also using ContactsManager",
+                icon: "person.2.fill",
+                isLoading: isLoadingAppUsers,
+                isEmpty: appUsers.isEmpty,
+                items: appUsers.prefix(3).map { $0.contact.displayName ?? "No Name" },
+                action: { showingAppUsersList = true }
+              )
+              
+              // Recommended to Invite Card
+              RecommendationCard(
+                title: "Recommended to Invite",
+                description: "People you might want to invite",
+                icon: "envelope.fill",
+                isLoading: isLoadingInvites,
+                isEmpty: inviteRecommendations.isEmpty,
+                items: inviteRecommendations.prefix(3).map { $0.contact.displayName ?? "No Name" },
+                action: { showingRecommendedList = true }
+              )
+            }
+            .padding()
+          }
+          .refreshable {
+            // Explicitly set loading states
+            await MainActor.run {
+              isLoadingInvites = true
+              isLoadingNearby = true
+              isLoadingAppUsers = true
+            }
+            // Try to load recommendations
+            await loadAllRecommendations()
+          }
+        }
+      }
+      .navigationTitle("Recommendations")
+      .alert("Error", isPresented: $showError) {
+        Button("OK", role: .cancel) {}
+      } message: {
+        Text(errorMessage ?? "An unknown error occurred")
+      }
+      .onAppear {
+        // Only load on first appearance
+        if !initialLoadCompleted {
+          // Create a task to load recommendations
+          Task { @MainActor in
+            // Explicitly set loading states
+            isLoadingInvites = true
+            isLoadingNearby = true
+            isLoadingAppUsers = true
+            
+            // Load recommendations
+            await loadAllRecommendations()
+            
+            // Mark as completed
+            initialLoadCompleted = true
+          }
+        }
+      }
+      .sheet(isPresented: $showingNearbyList) {
+        RecommendationListView(
+          title: "Nearby Contacts",
+          recommendations: nearbyContacts
+        )
+      }
+      .sheet(isPresented: $showingAppUsersList) {
+        RecommendationListView(
+          title: "App Users",
+          recommendations: appUsers
+        )
+      }
+      .sheet(isPresented: $showingRecommendedList) {
+        RecommendationListView(
+          title: "Recommended to Invite",
+          recommendations: inviteRecommendations
+        )
+      }
+    }
+  }
+  
+  private func loadAllRecommendations() async {
+    print("Starting to load all recommendations")
+    
+    // Ensure proper initialization of ContactsService
+    if !ContactsService.shared.isInitialized {
+      print("ContactsService not initialized, attempting to initialize...")
+      
+      await MainActor.run {
+        isInitializing = true
+      }
+      
+      do {
+        let apiKey = ConfigurationManager.shared.apiKey
+        try await ContactsService.shared.initialize(
+          withAPIKey: apiKey,
+          userId: "12345676890"
+        )
+        
+        await MainActor.run {
+          print("ContactsService initialized successfully")
+          isInitializing = false
+        }
+      } catch {
+        print("Failed to initialize ContactsService: \(error.localizedDescription)")
+        
+        await MainActor.run {
+          errorMessage = "Failed to initialize ContactsService: \(error.localizedDescription)"
+          showError = true
+          
+          // Reset all loading states since we can't proceed
+          isInitializing = false
+          isLoadingInvites = false
+          isLoadingNearby = false
+          isLoadingAppUsers = false
+        }
+        return
+      }
+    }
+    
+    // Using consistent sample IDs for demo - replace with actual IDs in production
+    let sampleCanonicalId = UUID(uuidString: "E621E1F8-C36C-495A-93FC-0C247A3E6E5F")!
+    let sampleOrgId = UUID(uuidString: "F621E1F8-C36C-495A-93FC-0C247A3E6E5F")!
+    
+    // Load each type of recommendation concurrently
+    async let invitesTask = loadInviteRecommendations(
+      canonicalId: sampleCanonicalId, orgId: sampleOrgId)
+    async let nearbyTask = loadNearbyContacts()
+    async let appUsersTask = loadAppUsers(orgId: sampleOrgId)
+    
+    // Wait for all tasks to complete
+    await (_, _, _) = (invitesTask, nearbyTask, appUsersTask)
+    
+    await MainActor.run {
+      print("All recommendation loading tasks completed")
+    }
+  }
+  
+  private func loadInviteRecommendations(canonicalId: UUID, orgId: UUID) async {
+    print("Loading invite recommendations")
+    
+    // Set loading state on main thread
+    await MainActor.run {
+      isLoadingInvites = true
+    }
+    
+    do {
+      let recommendations = try await ContactsService.shared.getRecommendedContactsToInvite(
+        canonicalContactId: canonicalId,
+        organizationId: orgId,
+        limit: 30
+      )
+      
+      await MainActor.run {
+        print("Successfully loaded \(recommendations.count) invite recommendations")
+        inviteRecommendations = recommendations
+        isLoadingInvites = false
+      }
+    } catch {
+      await MainActor.run {
+        print("Error loading invite recommendations: \(error.localizedDescription)")
+        errorMessage = "Failed to load invite recommendations: \(error.localizedDescription)"
+        showError = true
+        isLoadingInvites = false
+      }
+    }
+  }
+  
+  private func loadNearbyContacts() async {
+    print("Loading nearby contacts")
+    
+    // Set loading state on main thread
+    await MainActor.run {
+      isLoadingNearby = true
+    }
+    
+    do {
+      // Sample coordinates for San Francisco - replace with actual location in production
+      let contacts = try await ContactsService.shared.getNearbyContacts(
+        latitude: 37.7749,
+        longitude: -122.4194,
+        radiusInKm: 10,
+        limit: 30
+      )
+      
+      await MainActor.run {
+        print("Successfully loaded \(contacts.count) nearby contacts")
+        nearbyContacts = contacts
+        isLoadingNearby = false
+      }
+    } catch {
+      await MainActor.run {
+        print("Error loading nearby contacts: \(error.localizedDescription)")
+        errorMessage = "Failed to load nearby contacts: \(error.localizedDescription)"
+        showError = true
+        isLoadingNearby = false
+      }
+    }
+  }
+  
+  private func loadAppUsers(orgId: UUID) async {
+    print("Loading app users")
+    
+    // Set loading state on main thread
+    await MainActor.run {
+      isLoadingAppUsers = true
+    }
+    
+    do {
+      let users = try await ContactsService.shared.getContactsUsingApp(
+        organizationId: orgId,
+        limit: 30
+      )
+      
+      await MainActor.run {
+        print("Successfully loaded \(users.count) app users")
+        appUsers = users
+        isLoadingAppUsers = false
+      }
+    } catch {
+      await MainActor.run {
+        print("Error loading app users: \(error.localizedDescription)")
+        errorMessage = "Failed to load app users: \(error.localizedDescription)"
+        showError = true
+        isLoadingAppUsers = false
+      }
+    }
+  }
+}
+
+// Card view for each recommendation type
+struct RecommendationCard: View {
+  let title: String
+  let description: String
+  let icon: String
+  let isLoading: Bool
+  let isEmpty: Bool
+  let items: [String]
+  let action: () -> Void
+  
+  var body: some View {
+    Button(action: action) {
+      VStack(alignment: .leading, spacing: 12) {
+        // Header with icon
+        HStack {
+          Image(systemName: icon)
+            .font(.title2)
+            .foregroundColor(.blue)
+          
+          Text(title)
+            .font(.headline)
+          
+          Spacer()
+          
+          Image(systemName: "chevron.right")
+            .foregroundColor(.gray)
+        }
+        
+        Text(description)
+          .font(.subheadline)
+          .foregroundColor(.gray)
+        
+        // Content preview
+        if isLoading {
+          HStack {
+            ProgressView()
+            Text("Loading...")
+              .font(.caption)
+              .foregroundColor(.gray)
+          }
+          .frame(height: 70)
+        } else if isEmpty {
+          Text("No items available")
+            .font(.caption)
+            .foregroundColor(.gray)
+            .frame(height: 70)
+        } else {
+          VStack(alignment: .leading, spacing: 6) {
+            ForEach(items, id: \.self) { item in
+              HStack {
+                Image(systemName: "person.circle")
+                  .foregroundColor(.gray)
+                Text(item)
+                  .font(.callout)
+              }
+            }
+            
+            if items.count < 3 {
+              Spacer()
+            }
+          }
+          .frame(minHeight: 70, alignment: .leading)
+        }
+      }
+      .padding()
+      .frame(maxWidth: .infinity)
+      .background(Color(.systemBackground))
+      .cornerRadius(12)
+      .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+    }
+    .buttonStyle(PlainButtonStyle())
+  }
+}
+
+// View for displaying a full list of recommendations
+struct RecommendationListView: View {
+  let title: String
+  let recommendations: [ContactRecommendation]
+  @Environment(\.dismiss) private var dismiss
+  
+  var body: some View {
+    NavigationView {
+      if recommendations.isEmpty {
+        ContentUnavailableView(
+          "No Recommendations",
+          systemImage: "star.slash",
+          description: Text("No \(title.lowercased()) available at this time")
+        )
+        .navigationTitle(title)
+        .toolbar {
+          ToolbarItem(placement: .navigationBarTrailing) {
+            Button("Done") {
+              dismiss()
+            }
+          }
+        }
+      } else {
+        List {
+          ForEach(recommendations, id: \.contact.id) { recommendation in
+            RecommendationRow(recommendation: recommendation)
+          }
+        }
+        .navigationTitle(title)
+        .toolbar {
+          ToolbarItem(placement: .navigationBarTrailing) {
+            Button("Done") {
+              dismiss()
+            }
+          }
+        }
+      }
+    }
+  }
+} 
