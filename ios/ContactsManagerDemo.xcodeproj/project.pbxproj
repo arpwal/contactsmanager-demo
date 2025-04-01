@@ -290,7 +290,6 @@
 				INFOPLIST_FILE = ContactsManagerDemo/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Rolodex;
 				INFOPLIST_KEY_NSContactsUsageDescription = "We need access to your contacts to demo the ContactsManager SDK";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -326,7 +325,6 @@
 				INFOPLIST_FILE = ContactsManagerDemo/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Rolodex;
 				INFOPLIST_KEY_NSContactsUsageDescription = "We need access to your contacts to demo the ContactsManager SDK";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

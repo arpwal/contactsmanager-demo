@@ -136,9 +136,12 @@ struct ContactsRecommendationsView: View {
       
       do {
         let apiKey = ConfigurationManager.shared.apiKey
+        // Use UserManager to get the user ID
+        let userId = UserManager.shared.getUserId() ?? UUID().uuidString
+        
         try await ContactsService.shared.initialize(
           withAPIKey: apiKey,
-          userId: "12345676890"
+          userId: userId
         )
         
         await MainActor.run {
