@@ -4,10 +4,8 @@ import SwiftUI
 
 struct ContactsRecommendationsView: View {
   @State private var inviteRecommendations: [ContactRecommendation] = []
-  @State private var nearbyContacts: [ContactRecommendation] = []
   @State private var appUsers: [ContactRecommendation] = []
   @State private var isLoadingInvites = false
-  @State private var isLoadingNearby = false
   @State private var isLoadingAppUsers = false
   @State private var showError = false
   @State private var errorMessage: String?
@@ -17,7 +15,6 @@ struct ContactsRecommendationsView: View {
   @State private var initialLoadCompleted = false
   
   // States for navigation
-  @State private var showingNearbyList = false
   @State private var showingAppUsersList = false
   @State private var showingRecommendedList = false
   
@@ -26,22 +23,11 @@ struct ContactsRecommendationsView: View {
       Group {
         if isInitializing {
           ProgressView("Initializing Service...")
-        } else if isLoadingInvites && isLoadingNearby && isLoadingAppUsers && !initialLoadCompleted {
+        } else if isLoadingInvites && isLoadingAppUsers && !initialLoadCompleted {
           ProgressView("Loading Recommendations...")
         } else {
           ScrollView {
             VStack(spacing: 20) {
-              // Nearby Contacts Card
-              RecommendationCard(
-                title: "Nearby Contacts",
-                description: "People close to your current location",
-                icon: "location.fill",
-                isLoading: isLoadingNearby,
-                isEmpty: nearbyContacts.isEmpty,
-                items: nearbyContacts.prefix(3).map { $0.contact.displayName ?? "No Name" },
-                action: { showingNearbyList = true }
-              )
-              
               // App Users Card
               RecommendationCard(
                 title: "App Users",
@@ -70,7 +56,6 @@ struct ContactsRecommendationsView: View {
             // Explicitly set loading states
             await MainActor.run {
               isLoadingInvites = true
-              isLoadingNearby = true
               isLoadingAppUsers = true
             }
             // Try to load recommendations
@@ -91,7 +76,6 @@ struct ContactsRecommendationsView: View {
           Task { @MainActor in
             // Explicitly set loading states
             isLoadingInvites = true
-            isLoadingNearby = true
             isLoadingAppUsers = true
             
             // Load recommendations
@@ -101,12 +85,6 @@ struct ContactsRecommendationsView: View {
             initialLoadCompleted = true
           }
         }
-      }
-      .sheet(isPresented: $showingNearbyList) {
-        RecommendationListView(
-          title: "Nearby Contacts",
-          recommendations: nearbyContacts
-        )
       }
       .sheet(isPresented: $showingAppUsersList) {
         RecommendationListView(
@@ -158,7 +136,6 @@ struct ContactsRecommendationsView: View {
           // Reset all loading states since we can't proceed
           isInitializing = false
           isLoadingInvites = false
-          isLoadingNearby = false
           isLoadingAppUsers = false
         }
         return
@@ -167,11 +144,10 @@ struct ContactsRecommendationsView: View {
     
     // Load each type of recommendation concurrently
     async let invitesTask = loadInviteRecommendations()
-    async let nearbyTask = loadNearbyContacts()
     async let appUsersTask = loadAppUsers()
     
     // Wait for all tasks to complete
-    await (_, _, _) = (invitesTask, nearbyTask, appUsersTask)
+    await (_, _) = (invitesTask, appUsersTask)
     
     await MainActor.run {
       print("All recommendation loading tasks completed")
@@ -187,7 +163,7 @@ struct ContactsRecommendationsView: View {
     }
     
     do {
-      let recommendations = try await ContactsService.shared.getRecommendedContactsToInvite(
+      let recommendations = try await ContactsService.shared.getSharedContactsByUsersToInvite(
         limit: 30
       )
       
@@ -202,38 +178,6 @@ struct ContactsRecommendationsView: View {
         errorMessage = "Failed to load invite recommendations: \(error.localizedDescription)"
         showError = true
         isLoadingInvites = false
-      }
-    }
-  }
-  
-  private func loadNearbyContacts() async {
-    print("Loading nearby contacts")
-    
-    // Set loading state on main thread
-    await MainActor.run {
-      isLoadingNearby = true
-    }
-    
-    do {
-      // Sample coordinates for San Francisco - replace with actual location in production
-      let contacts = try await ContactsService.shared.getNearbyContacts(
-        latitude: 37.7749,
-        longitude: -122.4194,
-        radiusInKm: 10,
-        limit: 30
-      )
-      
-      await MainActor.run {
-        print("Successfully loaded \(contacts.count) nearby contacts")
-        nearbyContacts = contacts
-        isLoadingNearby = false
-      }
-    } catch {
-      await MainActor.run {
-        print("Error loading nearby contacts: \(error.localizedDescription)")
-        errorMessage = "Failed to load nearby contacts: \(error.localizedDescription)"
-        showError = true
-        isLoadingNearby = false
       }
     }
   }
