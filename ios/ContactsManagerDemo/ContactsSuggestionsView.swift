@@ -2,7 +2,7 @@ import Combine
 import ContactsManager
 import SwiftUI
 
-struct ContactsRecommendationsView: View {
+struct ContactsSuggestionsView: View {
   @State private var inviteRecommendations: [ContactRecommendation] = []
   @State private var appUsers: [ContactRecommendation] = []
   @State private var isLoadingInvites = false
@@ -24,7 +24,7 @@ struct ContactsRecommendationsView: View {
         if isInitializing {
           ProgressView("Initializing Service...")
         } else if isLoadingInvites && isLoadingAppUsers && !initialLoadCompleted {
-          ProgressView("Loading Recommendations...")
+          ProgressView("Loading Suggestions...")
         } else {
           ScrollView {
             VStack(spacing: 20) {
@@ -63,7 +63,7 @@ struct ContactsRecommendationsView: View {
           }
         }
       }
-      .navigationTitle("Recommendations")
+      .navigationTitle("Suggestions")
       .alert("Error", isPresented: $showError) {
         Button("OK", role: .cancel) {}
       } message: {

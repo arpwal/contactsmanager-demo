@@ -19,14 +19,24 @@ struct ContentView: View {
       if isRegistered {
         // Main tab view - only shown when registered
         TabView {
+          HomeFeedView()
+            .tabItem {
+              Label("Home", systemImage: "house.fill")
+            }
+            
+          FollowsView()
+            .tabItem {
+              Label("Social", systemImage: "person.2.fill")
+            }
+
           ContactsSearchView()
             .tabItem {
               Label("Contacts", systemImage: "person.crop.circle.fill")
             }
 
-          ContactsRecommendationsView()
+          ContactsSuggestionsView()
             .tabItem {
-              Label("Recommendations", systemImage: "star.fill")
+              Label("Suggestions", systemImage: "star.fill")
             }
         }
         .onAppear {
