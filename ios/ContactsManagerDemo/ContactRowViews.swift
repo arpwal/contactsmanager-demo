@@ -31,6 +31,7 @@ struct ContactRow: View {
         VStack(alignment: .leading, spacing: 4) {
           Text(contact.displayName ?? "No Name")
             .font(.headline)
+            .foregroundColor(.primary)
 
           let info = contact.displayInfo
           Text(info)
@@ -77,6 +78,7 @@ struct RecommendationRow: View {
         VStack(alignment: .leading, spacing: 4) {
           Text(recommendation.contact.displayName ?? "No Name")
             .font(.headline)
+            .foregroundColor(.primary)
 
           Text(recommendation.reason)
             .font(.subheadline)
@@ -85,16 +87,17 @@ struct RecommendationRow: View {
 
         Spacer()
 
-        // Score indicator
-        ZStack {
-          Circle()
-            .stroke(Color.blue.opacity(0.3), lineWidth: 2)
-            .frame(width: 40, height: 40)
-
-          Text(String(format: "%.1f", recommendation.score * 10))
-            .font(.system(.caption, design: .rounded))
-            .bold()
-        }
+        // Score indicator (now monochrome)
+        Text(String(format: "%.1f", recommendation.score * 10))
+          .font(.caption2)
+          .foregroundColor(.gray)
+          .padding(8)
+          .background(
+            Circle()
+              .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+              .background(Circle().fill(Color(.systemGray6)))
+          )
+          .frame(width: 36)
       }
     }
     .sheet(isPresented: $showingDetail) {

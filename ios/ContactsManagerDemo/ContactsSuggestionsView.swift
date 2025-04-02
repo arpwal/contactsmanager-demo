@@ -10,14 +10,21 @@ struct ContactsSuggestionsView: View {
   @State private var showError = false
   @State private var errorMessage: String?
   @State private var isInitializing = false
-  
+
   // Track if data has been loaded at least once
   @State private var initialLoadCompleted = false
-  
+
   // States for navigation
   @State private var showingAppUsersList = false
   @State private var showingRecommendedList = false
-  
+
+  // Grid layout
+  private let columns = [
+    GridItem(.flexible()),
+    GridItem(.flexible()),
+    GridItem(.flexible()),
+  ]
+
   var body: some View {
     NavigationView {
       Group {
@@ -27,28 +34,86 @@ struct ContactsSuggestionsView: View {
           ProgressView("Loading Suggestions...")
         } else {
           ScrollView {
-            VStack(spacing: 20) {
-              // App Users Card
-              RecommendationCard(
-                title: "App Users",
-                description: "Contacts also using ContactsManager",
-                icon: "person.2.fill",
-                isLoading: isLoadingAppUsers,
-                isEmpty: appUsers.isEmpty,
-                items: appUsers.prefix(3).map { $0.contact.displayName ?? "No Name" },
-                action: { showingAppUsersList = true }
-              )
-              
-              // Recommended to Invite Card
-              RecommendationCard(
-                title: "Recommended to Invite",
-                description: "People you might want to invite",
-                icon: "envelope.fill",
-                isLoading: isLoadingInvites,
-                isEmpty: inviteRecommendations.isEmpty,
-                items: inviteRecommendations.prefix(3).map { $0.contact.displayName ?? "No Name" },
-                action: { showingRecommendedList = true }
-              )
+            VStack(alignment: .leading, spacing: 24) {
+              // App Users Grid Section
+              VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                  Text("App Users")
+                    .font(.headline)
+
+                  Spacer()
+
+                  Button("See All") {
+                    showingAppUsersList = true
+                  }
+                  .font(.subheadline)
+                  .foregroundColor(.gray)
+                }
+
+                if isLoadingAppUsers {
+                  HStack {
+                    Spacer()
+                    ProgressView()
+                    Spacer()
+                  }
+                  .frame(height: 120)
+                } else if appUsers.isEmpty {
+                  Text("No app users found")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical)
+                } else {
+                  // 3x3 Grid of user profile pictures
+                  LazyVGrid(columns: columns, spacing: 16) {
+                    ForEach(appUsers.prefix(9), id: \.contact.id) { user in
+                      UserProfileCircle(contact: user.contact)
+                        .frame(height: 90)
+                    }
+                  }
+                }
+              }
+
+              Divider()
+                .padding(.vertical, 8)
+
+              // Recommended to Invite Section
+              VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                  Text("Recommended to Invite")
+                    .font(.headline)
+
+                  Spacer()
+
+                  Button("See All") {
+                    showingRecommendedList = true
+                  }
+                  .font(.subheadline)
+                  .foregroundColor(.gray)
+                }
+
+                if isLoadingInvites {
+                  HStack {
+                    Spacer()
+                    ProgressView()
+                    Spacer()
+                  }
+                  .frame(height: 60)
+                } else if inviteRecommendations.isEmpty {
+                  Text("No recommendations found")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical)
+                } else {
+                  // List of recommended users
+                  VStack(spacing: 16) {
+                    ForEach(inviteRecommendations.prefix(5), id: \.contact.id) { recommendation in
+                      ContactRow(contact: recommendation.contact)
+                    }
+                  }
+                }
+              }
             }
             .padding()
           }
@@ -77,10 +142,10 @@ struct ContactsSuggestionsView: View {
             // Explicitly set loading states
             isLoadingInvites = true
             isLoadingAppUsers = true
-            
+
             // Load recommendations
             await loadAllRecommendations()
-            
+
             // Mark as completed
             initialLoadCompleted = true
           }
@@ -100,39 +165,39 @@ struct ContactsSuggestionsView: View {
       }
     }
   }
-  
+
   private func loadAllRecommendations() async {
     print("Starting to load all recommendations")
-    
+
     // Ensure proper initialization of ContactsService
     if !ContactsService.shared.isInitialized {
       print("ContactsService not initialized, attempting to initialize...")
-      
+
       await MainActor.run {
         isInitializing = true
       }
-      
+
       do {
         let apiKey = ConfigurationManager.shared.apiKey
         // Use UserManager to get the user ID
         let userId = UserManager.shared.getUserId() ?? UUID().uuidString
-        
+
         try await ContactsService.shared.initialize(
           withAPIKey: apiKey,
           userId: userId
         )
-        
+
         await MainActor.run {
           print("ContactsService initialized successfully")
           isInitializing = false
         }
       } catch {
         print("Failed to initialize ContactsService: \(error.localizedDescription)")
-        
+
         await MainActor.run {
           errorMessage = "Failed to initialize ContactsService: \(error.localizedDescription)"
           showError = true
-          
+
           // Reset all loading states since we can't proceed
           isInitializing = false
           isLoadingInvites = false
@@ -141,32 +206,32 @@ struct ContactsSuggestionsView: View {
         return
       }
     }
-    
+
     // Load each type of recommendation concurrently
     async let invitesTask = loadInviteRecommendations()
     async let appUsersTask = loadAppUsers()
-    
+
     // Wait for all tasks to complete
     await (_, _) = (invitesTask, appUsersTask)
-    
+
     await MainActor.run {
       print("All recommendation loading tasks completed")
     }
   }
-  
+
   private func loadInviteRecommendations() async {
     print("Loading invite recommendations")
-    
+
     // Set loading state on main thread
     await MainActor.run {
       isLoadingInvites = true
     }
-    
+
     do {
       let recommendations = try await ContactsService.shared.getSharedContactsByUsersToInvite(
         limit: 30
       )
-      
+
       await MainActor.run {
         print("Successfully loaded \(recommendations.count) invite recommendations")
         inviteRecommendations = recommendations
@@ -181,20 +246,20 @@ struct ContactsSuggestionsView: View {
       }
     }
   }
-  
+
   private func loadAppUsers() async {
     print("Loading app users")
-    
+
     // Set loading state on main thread
     await MainActor.run {
       isLoadingAppUsers = true
     }
-    
+
     do {
       let users = try await ContactsService.shared.getContactsUsingApp(
         limit: 30
       )
-      
+
       await MainActor.run {
         print("Successfully loaded \(users.count) app users")
         appUsers = users
@@ -211,77 +276,42 @@ struct ContactsSuggestionsView: View {
   }
 }
 
-// Card view for each recommendation type
-struct RecommendationCard: View {
-  let title: String
-  let description: String
-  let icon: String
-  let isLoading: Bool
-  let isEmpty: Bool
-  let items: [String]
-  let action: () -> Void
-  
+// User Profile Circle view for grid
+struct UserProfileCircle: View {
+  let contact: Contact
+  @State private var showingDetail = false
+
   var body: some View {
-    Button(action: action) {
-      VStack(alignment: .leading, spacing: 12) {
-        // Header with icon
-        HStack {
-          Image(systemName: icon)
-            .font(.title2)
-            .foregroundColor(.blue)
-          
-          Text(title)
-            .font(.headline)
-          
-          Spacer()
-          
-          Image(systemName: "chevron.right")
-            .foregroundColor(.gray)
-        }
-        
-        Text(description)
-          .font(.subheadline)
-          .foregroundColor(.gray)
-        
-        // Content preview
-        if isLoading {
-          HStack {
-            ProgressView()
-            Text("Loading...")
-              .font(.caption)
+    VStack {
+      Button(action: { showingDetail = true }) {
+        ZStack {
+          Circle()
+            .fill(Color(.systemGray6))
+
+          if contact.imageDataAvailable,
+            let thumbnailData = contact.thumbnailImageData,
+            let uiImage = UIImage(data: thumbnailData)
+          {
+            Image(uiImage: uiImage)
+              .resizable()
+              .aspectRatio(contentMode: .fill)
+              .clipShape(Circle())
+          } else {
+            Image(systemName: "person.fill")
+              .font(.system(size: 30))
               .foregroundColor(.gray)
           }
-          .frame(height: 70)
-        } else if isEmpty {
-          Text("No items available")
-            .font(.caption)
-            .foregroundColor(.gray)
-            .frame(height: 70)
-        } else {
-          VStack(alignment: .leading, spacing: 6) {
-            ForEach(items, id: \.self) { item in
-              HStack {
-                Image(systemName: "person.circle")
-                  .foregroundColor(.gray)
-                Text(item)
-                  .font(.callout)
-              }
-            }
-            
-            if items.count < 3 {
-              Spacer()
-            }
-          }
-          .frame(minHeight: 70, alignment: .leading)
         }
       }
-      .padding()
-      .frame(maxWidth: .infinity)
-      .background(Color(.systemBackground))
-      .cornerRadius(12)
-      .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+
+      Text(contact.displayName ?? "")
+        .font(.caption)
+        .lineLimit(1)
+        .truncationMode(.tail)
     }
-    .buttonStyle(PlainButtonStyle())
+    .sheet(isPresented: $showingDetail) {
+      ContactDetailView(contact: contact)
+    }
   }
 }
 
@@ -290,7 +320,7 @@ struct RecommendationListView: View {
   let title: String
   let recommendations: [ContactRecommendation]
   @Environment(\.dismiss) private var dismiss
-  
+
   var body: some View {
     NavigationView {
       if recommendations.isEmpty {
@@ -324,4 +354,4 @@ struct RecommendationListView: View {
       }
     }
   }
-} 
+}
