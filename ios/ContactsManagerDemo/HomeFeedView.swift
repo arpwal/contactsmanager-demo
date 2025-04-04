@@ -14,6 +14,8 @@ struct HomeFeedView: View {
   @State private var isLoading = false
   @State private var error: Error?
   @State private var feedMode: FeedMode = .following
+  @State private var showCreateEventSheet = false
+  @State private var isPostingEvent = false
 
   enum FeedMode: String, CaseIterable, Identifiable {
     case following = "Following"
@@ -24,48 +26,71 @@ struct HomeFeedView: View {
 
   var body: some View {
     NavigationView {
-      VStack {
-        if isLoading {
-          ProgressView()
+      ZStack {
+        VStack {
+          if isLoading {
+            ProgressView()
+              .padding()
+          } else if let error = error {
+            VStack {
+              Text("Error loading events")
+                .font(.headline)
+              Text(error.localizedDescription)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+              Button("Try Again") {
+                Task {
+                  await loadEvents()
+                }
+              }
+              .padding()
+              .background(Color.blue)
+              .foregroundColor(.white)
+              .cornerRadius(8)
+            }
             .padding()
-        } else if let error = error {
-          VStack {
-            Text("Error loading events")
+          } else if events.isEmpty {
+            VStack {
+              Text(
+                feedMode == .following ? "No events from your followers yet" : "No events available"
+              )
               .font(.headline)
-            Text(error.localizedDescription)
-              .font(.subheadline)
-              .foregroundColor(.secondary)
-            Button("Try Again") {
-              Task {
-                await loadEvents()
+              Text("Events will appear here when available")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            }
+            .padding()
+          } else {
+            List {
+              ForEach(events) { event in
+                EventRow(event: event)
               }
             }
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(8)
-          }
-          .padding()
-        } else if events.isEmpty {
-          VStack {
-            Text(
-              feedMode == .following ? "No events from your followers yet" : "No events available"
-            )
-            .font(.headline)
-            Text("Events will appear here when available")
-              .font(.subheadline)
-              .foregroundColor(.secondary)
-          }
-          .padding()
-        } else {
-          List {
-            ForEach(events) { event in
-              EventRow(event: event)
+            .listStyle(PlainListStyle())
+            .refreshable {
+              await loadEvents()
             }
           }
-          .listStyle(PlainListStyle())
-          .refreshable {
-            await loadEvents()
+        }
+        
+        // Floating action button
+        VStack {
+          Spacer()
+          HStack {
+            Spacer()
+            Button(action: {
+              showCreateEventSheet = true
+            }) {
+              Image(systemName: "plus")
+                .font(.title)
+                .foregroundColor(.white)
+                .frame(width: 55, height: 55)
+                .background(Color.blue)
+                .clipShape(Circle())
+                .shadow(radius: 4)
+            }
+            .padding(.trailing, 20)
+            .padding(.bottom, 20)
           }
         }
       }
@@ -89,6 +114,13 @@ struct HomeFeedView: View {
       .onAppear {
         Task {
           await loadEvents()
+        }
+      }
+      .sheet(isPresented: $showCreateEventSheet) {
+        CreateEventSheet(isPresented: $showCreateEventSheet, isPosting: $isPostingEvent) { eventText in
+          Task {
+            await createEvent(text: eventText)
+          }
         }
       }
     }
@@ -122,6 +154,114 @@ struct HomeFeedView: View {
         self.error = fetchError
         self.isLoading = false
       }
+    }
+  }
+  
+  private func createEvent(text: String) async {
+    guard !text.isEmpty else { return }
+    
+    isPostingEvent = true
+    
+    do {
+      let service = SocialService()
+      
+      // Create a simple post request with just the fields we need
+      // The service layer will handle the missing fields
+      let postRequest = CreateEventRequest(
+        eventType: "post",
+        title: text,
+        description: "",
+        isPublic: true
+      )
+      
+      // Use the service directly
+      let result = try await service.createEvent(eventData: postRequest)
+      
+      await MainActor.run {
+        isPostingEvent = false
+        error = nil
+        showCreateEventSheet = false
+      }
+      
+      // After successful creation, refresh the feed
+      await loadEvents()
+      
+    } catch let createError {
+      print("Error creating event: \(createError)")
+      
+      await MainActor.run {
+        // Get a user-friendly error message
+        if let apiError = createError as? APIError {
+          switch apiError {
+          case .serverError(_, let message):
+            self.error = NSError(
+              domain: "EventCreationError",
+              code: 422,
+              userInfo: [NSLocalizedDescriptionKey: "Could not create post: \(message)"]
+            )
+          default:
+            self.error = apiError
+          }
+        } else {
+          self.error = createError
+        }
+        
+        isPostingEvent = false
+      }
+    }
+  }
+}
+
+struct CreateEventSheet: View {
+  @Binding var isPresented: Bool
+  @Binding var isPosting: Bool
+  @State private var eventText = ""
+  let maxCharacterCount = 140
+  let onPost: (String) -> Void
+  
+  var body: some View {
+    NavigationView {
+      VStack {
+        if isPosting {
+          Spacer()
+          ProgressView("Posting...")
+          Spacer()
+        } else {
+          ZStack(alignment: .topLeading) {
+            TextEditor(text: $eventText)
+              .padding()
+              .background(Color(UIColor.systemBackground))
+            
+            if eventText.isEmpty {
+              Text("What's happening?")
+                .foregroundColor(Color(UIColor.placeholderText))
+                .padding(.horizontal, 20)
+                .padding(.vertical, 24)
+            }
+          }
+          
+          HStack {
+            Text("\(eventText.count)/\(maxCharacterCount)")
+              .foregroundColor(eventText.count > maxCharacterCount ? .red : .gray)
+              .font(.footnote)
+            Spacer()
+          }
+          .padding(.horizontal)
+        }
+      }
+      .navigationBarTitle("New Post", displayMode: .inline)
+      .navigationBarItems(
+        leading: Button("Cancel") {
+          isPresented = false
+        },
+        trailing: Button(action: {
+          onPost(eventText)
+        }) {
+          Image(systemName: "paperplane.fill")
+            .foregroundColor(.blue)
+        }
+        .disabled(eventText.isEmpty || eventText.count > maxCharacterCount || isPosting)
+      )
     }
   }
 }

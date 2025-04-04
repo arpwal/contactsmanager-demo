@@ -280,28 +280,35 @@ struct ContactsSuggestionsView: View {
 struct UserProfileCircle: View {
   let contact: Contact
   @State private var showingDetail = false
+  @State private var showingActionSheet = false
+  @State private var isFollowing = false
+  @State private var isLoadingFollowStatus = false
+  
+  // Social service for follow/unfollow functionality
+  private let socialService = SocialService()
 
   var body: some View {
     VStack {
-      Button(action: { showingDetail = true }) {
-        ZStack {
-          Circle()
-            .fill(Color(.systemGray6))
+      ZStack {
+        Circle()
+          .fill(Color(.systemGray6))
 
-          if contact.imageDataAvailable,
-            let thumbnailData = contact.thumbnailImageData,
-            let uiImage = UIImage(data: thumbnailData)
-          {
-            Image(uiImage: uiImage)
-              .resizable()
-              .aspectRatio(contentMode: .fill)
-              .clipShape(Circle())
-          } else {
-            Image(systemName: "person.fill")
-              .font(.system(size: 30))
-              .foregroundColor(.gray)
-          }
+        if contact.imageDataAvailable,
+          let thumbnailData = contact.thumbnailImageData,
+          let uiImage = UIImage(data: thumbnailData)
+        {
+          Image(uiImage: uiImage)
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .clipShape(Circle())
+        } else {
+          Image(systemName: "person.fill")
+            .font(.system(size: 30))
+            .foregroundColor(.gray)
         }
+      }
+      .onTapGesture {
+        showingActionSheet = true
       }
 
       Text(contact.displayName ?? "")
@@ -311,6 +318,94 @@ struct UserProfileCircle: View {
     }
     .sheet(isPresented: $showingDetail) {
       ContactDetailView(contact: contact)
+    }
+    .confirmationDialog("Contact Options", isPresented: $showingActionSheet, titleVisibility: .visible) {
+      Button("Open Contact Card") {
+        showingDetail = true
+      }
+      
+      if isLoadingFollowStatus {
+        Button("Loading...") {
+          // Disabled placeholder button
+        }
+        .disabled(true)
+      } else {
+        Button(isFollowing ? "Unfollow" : "Follow") {
+          toggleFollowStatus()
+        }
+      }
+      
+      Button("Cancel", role: .cancel) {}
+    } message: {
+      Text(contact.displayName ?? "Contact")
+    }
+    .onAppear {
+      loadFollowStatus()
+    }
+  }
+  
+  // Load current follow status
+  private func loadFollowStatus() {
+    guard !isLoadingFollowStatus else { return }
+    isLoadingFollowStatus = true
+    
+    Task {
+      do {
+        // Use the contact's identifier directly
+        let contactId = contact.identifier
+        print("Checking follow status for contact ID: \(contactId)")
+        
+        // Check follow status
+        let response = try await socialService.isFollowingContact(followedId: contactId)
+        
+        // Update UI on main thread
+        await MainActor.run {
+          isFollowing = response.isFollowing
+          isLoadingFollowStatus = false
+        }
+      } catch {
+        print("Error checking follow status: \(error.localizedDescription)")
+        await MainActor.run {
+          isFollowing = false
+          isLoadingFollowStatus = false
+        }
+      }
+    }
+  }
+  
+  // Toggle follow status (follow or unfollow)
+  private func toggleFollowStatus() {
+    Task {
+      isLoadingFollowStatus = true
+      
+      do {
+        // Use the contact's identifier directly
+        let contactId = contact.identifier
+        print("Performing follow action with contact ID: \(contactId)")
+        
+        if isFollowing {
+          // Unfollow
+          let result = try await socialService.unfollowContact(followedId: contactId)
+          await MainActor.run {
+            isFollowing = false
+          }
+        } else {
+          // Follow
+          let result = try await socialService.followContact(followedId: contactId)
+          await MainActor.run {
+            isFollowing = true
+          }
+        }
+        
+        await MainActor.run {
+          isLoadingFollowStatus = false
+        }
+      } catch {
+        print("Error toggling follow status: \(error.localizedDescription)")
+        await MainActor.run {
+          isLoadingFollowStatus = false
+        }
+      }
     }
   }
 }
