@@ -148,11 +148,14 @@ struct RecommendationRow: View {
     Task {
       do {
         // Use the contact's identifier directly
-        let contactId = recommendation.contact.identifier
-        print("Checking follow status for contact ID: \(contactId)")
+        guard let organizationUserId = recommendation.organizationUserId else {
+          print("No organization user ID found for contact ID: \(recommendation.contact.identifier)")
+          return
+        }
+        print("Checking follow status for contact ID: \(organizationUserId)")
         
         // Check follow status
-        let response = try await socialService.isFollowingContact(followedId: contactId)
+        let response = try await socialService.isFollowingContact(followedId: organizationUserId)
         
         // Update UI on main thread
         await MainActor.run {
@@ -177,17 +180,20 @@ struct RecommendationRow: View {
     Task {
       do {
         // Use the contact's identifier directly
-        let contactId = recommendation.contact.identifier
-        print("Performing follow action with contact ID: \(contactId)")
+        guard let organizationUserId = recommendation.organizationUserId else {
+          print("No organization user ID found for contact ID: \(recommendation.contact.identifier)")
+          return
+        }
+        print("Performing follow action with contact ID: \(organizationUserId)")
         
         // Execute follow or unfollow
         if isFollowing {
-          let result = try await socialService.unfollowContact(followedId: contactId)
+          let result = try await socialService.unfollowContact(followedId: organizationUserId)
           await MainActor.run {
             isFollowing = false
           }
         } else {
-          let result = try await socialService.followContact(followedId: contactId)
+          let result = try await socialService.followContact(followedId: organizationUserId)
           await MainActor.run {
             isFollowing = true
           }

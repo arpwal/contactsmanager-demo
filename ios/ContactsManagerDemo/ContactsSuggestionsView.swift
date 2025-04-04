@@ -67,7 +67,7 @@ struct ContactsSuggestionsView: View {
                   // 3x3 Grid of user profile pictures
                   LazyVGrid(columns: columns, spacing: 16) {
                     ForEach(appUsers.prefix(9), id: \.contact.id) { user in
-                      UserProfileCircle(contact: user.contact)
+                      UserProfileCircle(appUser: user)
                         .frame(height: 90)
                     }
                   }
@@ -278,7 +278,7 @@ struct ContactsSuggestionsView: View {
 
 // User Profile Circle view for grid
 struct UserProfileCircle: View {
-  let contact: Contact
+  let appUser: ContactRecommendation
   @State private var showingDetail = false
   @State private var showingActionSheet = false
   @State private var isFollowing = false
@@ -293,8 +293,8 @@ struct UserProfileCircle: View {
         Circle()
           .fill(Color(.systemGray6))
 
-        if contact.imageDataAvailable,
-          let thumbnailData = contact.thumbnailImageData,
+        if appUser.contact.imageDataAvailable,
+          let thumbnailData = appUser.contact.thumbnailImageData,
           let uiImage = UIImage(data: thumbnailData)
         {
           Image(uiImage: uiImage)
@@ -311,13 +311,13 @@ struct UserProfileCircle: View {
         showingActionSheet = true
       }
 
-      Text(contact.displayName ?? "")
+      Text(appUser.contact.displayName ?? "")
         .font(.caption)
         .lineLimit(1)
         .truncationMode(.tail)
     }
     .sheet(isPresented: $showingDetail) {
-      ContactDetailView(contact: contact)
+      ContactDetailView(contact: appUser.contact)
     }
     .confirmationDialog("Contact Options", isPresented: $showingActionSheet, titleVisibility: .visible) {
       Button("Open Contact Card") {
@@ -337,7 +337,7 @@ struct UserProfileCircle: View {
       
       Button("Cancel", role: .cancel) {}
     } message: {
-      Text(contact.displayName ?? "Contact")
+      Text(appUser.contact.displayName ?? "Contact")
     }
     .onAppear {
       loadFollowStatus()
@@ -352,11 +352,13 @@ struct UserProfileCircle: View {
     Task {
       do {
         // Use the contact's identifier directly
-        let contactId = contact.identifier
-        print("Checking follow status for contact ID: \(contactId)")
+        guard let organizationUserId = appUser.organizationUserId else {
+          return
+        }
+        print("Checking follow status for organization user ID: \(organizationUserId)")
         
         // Check follow status
-        let response = try await socialService.isFollowingContact(followedId: contactId)
+        let response = try await socialService.isFollowingContact(followedId: organizationUserId)
         
         // Update UI on main thread
         await MainActor.run {
@@ -380,18 +382,20 @@ struct UserProfileCircle: View {
       
       do {
         // Use the contact's identifier directly
-        let contactId = contact.identifier
-        print("Performing follow action with contact ID: \(contactId)")
+        guard let organizationUserId = appUser.organizationUserId else {
+          return
+        }
+        print("Performing follow action with contact ID: \(organizationUserId)")
         
         if isFollowing {
           // Unfollow
-          let result = try await socialService.unfollowContact(followedId: contactId)
+          let result = try await socialService.unfollowContact(followedId: organizationUserId)
           await MainActor.run {
             isFollowing = false
           }
         } else {
           // Follow
-          let result = try await socialService.followContact(followedId: contactId)
+          let result = try await socialService.followContact(followedId: organizationUserId)
           await MainActor.run {
             isFollowing = true
           }
