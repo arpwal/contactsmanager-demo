@@ -266,62 +266,6 @@ struct CreateEventSheet: View {
   }
 }
 
-// Row for displaying an event
-struct EventRow: View {
-  let event: SocialEvent
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      HStack {
-        Text(event.title)
-          .font(.headline)
-        Spacer()
-        Text(event.eventType)
-          .font(.subheadline)
-          .padding(4)
-          .background(
-            RoundedRectangle(cornerRadius: 4)
-              .fill(Color.blue.opacity(0.2))
-          )
-      }
-
-      if let description = event.description, !description.isEmpty {
-        Text(description)
-          .font(.body)
-          .lineLimit(3)
-      }
-
-      if let location = event.location, !location.isEmpty {
-        HStack {
-          Image(systemName: "location.fill")
-            .foregroundColor(.secondary)
-          Text(location)
-            .font(.subheadline)
-            .foregroundColor(.secondary)
-        }
-      }
-
-      if let startTime = event.startTime {
-        HStack {
-          Image(systemName: "calendar")
-            .foregroundColor(.secondary)
-          Text(formatDate(startTime))
-            .font(.subheadline)
-            .foregroundColor(.secondary)
-        }
-      }
-    }
-    .padding(.vertical, 8)
-  }
-
-  private func formatDate(_ date: Date) -> String {
-    let formatter = DateFormatter()
-    formatter.dateStyle = .medium
-    formatter.timeStyle = .short
-    return formatter.string(from: date)
-  }
-}
-
 #Preview {
   HomeFeedView()
 }

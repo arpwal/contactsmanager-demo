@@ -76,7 +76,7 @@ struct ContactsSearchView: View {
           .padding()
         }
       }
-      .navigationTitle("Contacts")
+      .navigationTitle("Search Contacts")
       .toolbar {
         ToolbarItem(placement: .navigationBarTrailing) {
           if contactsAccessStatus == .authorized {

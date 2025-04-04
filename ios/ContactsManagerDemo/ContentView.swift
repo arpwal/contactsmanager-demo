@@ -26,12 +26,12 @@ struct ContentView: View {
             
           FollowsView()
             .tabItem {
-              Label("Social", systemImage: "person.2.fill")
+              Label("Profile", systemImage: "person.fill")
             }
 
           ContactsSearchView()
             .tabItem {
-              Label("Contacts", systemImage: "person.crop.circle.fill")
+              Label("Search", systemImage: "magnifyingglass")
             }
 
           ContactsSuggestionsView()
