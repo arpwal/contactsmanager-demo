@@ -395,7 +395,10 @@ struct UserProfileCircle: View {
           }
         } else {
           // Follow
-          let result = try await socialService.followContact(followedId: organizationUserId)
+          let result = try await socialService.followContact(
+            followedId: organizationUserId,
+            contactId: appUser.contact.identifier
+          )
           await MainActor.run {
             isFollowing = true
           }

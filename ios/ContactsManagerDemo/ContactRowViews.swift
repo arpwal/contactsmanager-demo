@@ -193,7 +193,10 @@ struct RecommendationRow: View {
             isFollowing = false
           }
         } else {
-          let result = try await socialService.followContact(followedId: organizationUserId)
+          let result = try await socialService.followContact(
+            followedId: organizationUserId,
+            contactId: recommendation.contact.identifier
+          )
           await MainActor.run {
             isFollowing = true
           }
