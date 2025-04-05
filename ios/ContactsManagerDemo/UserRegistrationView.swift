@@ -7,6 +7,7 @@ struct UserRegistrationView: View {
   @State private var showError = false
   @State private var errorMessage: String = ""
   @State private var isRegistering = false
+  @State private var isInitializing = false
   @State private var contactsAccessStatus: ContactsAccessStatus = .notDetermined
 
   @Binding var isRegistered: Bool
@@ -83,7 +84,7 @@ struct UserRegistrationView: View {
 
           // Register button
           Button(action: registerUser) {
-            if isRegistering {
+            if isRegistering || isInitializing {
               ProgressView()
                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
             } else {
@@ -118,7 +119,7 @@ struct UserRegistrationView: View {
   }
 
   private var canRegister: Bool {
-    if isRegistering { return false }
+    if isRegistering || isInitializing { return false }
 
     if contactsAccessStatus != .authorized { return false }
 
@@ -135,12 +136,56 @@ struct UserRegistrationView: View {
     guard canRegister else { return }
 
     isRegistering = true
-
-    // Simulate network call with a small delay
-    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-      UserManager.shared.registerUser(contactValue: contactValue, type: selectedType)
-      isRegistered = true
-      isRegistering = false
+    
+    // Step 1: First initialize ContactsService
+    Task {
+      do {
+        isInitializing = true
+        
+        // Register the user
+        UserManager.shared.registerUser(contactValue: contactValue, type: selectedType)
+        
+        // Get API key and user ID
+        let apiKey = ConfigurationManager.shared.apiKey
+        let userId = UserManager.shared.getUserId() ?? UUID().uuidString
+        
+        // Create UserInfo with the required fields
+        let userInfo = UserInfo(
+          userId: userId,
+          email: selectedType == .email ? contactValue : nil,
+          phone: selectedType == .phoneNumber ? contactValue : nil
+        )
+        
+        UserManager.shared.setUserInfo(userInfo)
+        
+        // Initialize ContactsService with the UserInfo
+        try await ContactsService.shared.initialize(
+          withAPIKey: apiKey,
+          userInfo: userInfo
+        )
+        
+        print("ContactsService initialized successfully in UserRegistrationView")
+        
+        // Update UI on main thread
+        await MainActor.run {
+          isInitializing = false
+          isRegistering = false
+          isRegistered = true
+        }
+      } catch {
+        // Handle initialization error
+        print("Error initializing ContactsService: \(error.localizedDescription)")
+        
+        await MainActor.run {
+          errorMessage = "Failed to initialize service: \(error.localizedDescription)"
+          showError = true
+          isInitializing = false
+          isRegistering = false
+          
+          // Rollback registration since initialization failed
+          UserManager.shared.clearRegistration()
+        }
+      }
     }
   }
 

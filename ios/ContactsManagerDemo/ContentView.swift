@@ -69,16 +69,14 @@ struct ContentView: View {
     Task { @MainActor in
       isInitializing = true
 
+      // Create a Task to handle async initialization
       do {
         // Only initialize if not already initialized
-        if !ContactsService.shared.isInitialized {
+        if let userInfo = UserManager.shared.getUserInfo() {
           let apiKey = ConfigurationManager.shared.apiKey
-          // Use the user ID from UserManager instead of hardcoded value
-          let userId = UserManager.shared.getUserId() ?? UUID().uuidString
-          
           try await ContactsService.shared.initialize(
             withAPIKey: apiKey,
-            userId: userId
+            userInfo: userInfo
           )
         }
         print("ContactsService initialized successfully in ContentView")

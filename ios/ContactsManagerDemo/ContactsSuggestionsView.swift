@@ -9,7 +9,6 @@ struct ContactsSuggestionsView: View {
   @State private var isLoadingAppUsers = false
   @State private var showError = false
   @State private var errorMessage: String?
-  @State private var isInitializing = false
 
   // Track if data has been loaded at least once
   @State private var initialLoadCompleted = false
@@ -28,9 +27,7 @@ struct ContactsSuggestionsView: View {
   var body: some View {
     NavigationView {
       Group {
-        if isInitializing {
-          ProgressView("Initializing Service...")
-        } else if isLoadingInvites && isLoadingAppUsers && !initialLoadCompleted {
+        if isLoadingInvites && isLoadingAppUsers && !initialLoadCompleted {
           ProgressView("Loading Suggestions...")
         } else {
           ScrollView {
@@ -168,44 +165,6 @@ struct ContactsSuggestionsView: View {
 
   private func loadAllRecommendations() async {
     print("Starting to load all recommendations")
-
-    // Ensure proper initialization of ContactsService
-    if !ContactsService.shared.isInitialized {
-      print("ContactsService not initialized, attempting to initialize...")
-
-      await MainActor.run {
-        isInitializing = true
-      }
-
-      do {
-        let apiKey = ConfigurationManager.shared.apiKey
-        // Use UserManager to get the user ID
-        let userId = UserManager.shared.getUserId() ?? UUID().uuidString
-
-        try await ContactsService.shared.initialize(
-          withAPIKey: apiKey,
-          userId: userId
-        )
-
-        await MainActor.run {
-          print("ContactsService initialized successfully")
-          isInitializing = false
-        }
-      } catch {
-        print("Failed to initialize ContactsService: \(error.localizedDescription)")
-
-        await MainActor.run {
-          errorMessage = "Failed to initialize ContactsService: \(error.localizedDescription)"
-          showError = true
-
-          // Reset all loading states since we can't proceed
-          isInitializing = false
-          isLoadingInvites = false
-          isLoadingAppUsers = false
-        }
-        return
-      }
-    }
 
     // Load each type of recommendation concurrently
     async let invitesTask = loadInviteRecommendations()
