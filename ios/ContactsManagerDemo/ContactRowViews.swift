@@ -13,8 +13,7 @@ struct ContactRow: View {
         Group {
           if contact.imageDataAvailable,
             let thumbnailData = contact.thumbnailImageData,
-            let uiImage = UIImage(data: thumbnailData)
-          {
+            let uiImage = UIImage(data: thumbnailData) {
             Image(uiImage: uiImage)
               .resizable()
               .aspectRatio(contentMode: .fill)
@@ -55,7 +54,7 @@ struct RecommendationRow: View {
   @State private var isFollowing = false
   @State private var isLoadingFollowStatus = false
   @State private var isPerformingFollowAction = false
-  
+
   // Social service for follow/unfollow functionality
   private let socialService = SocialService()
 
@@ -66,8 +65,7 @@ struct RecommendationRow: View {
         Group {
           if recommendation.contact.imageDataAvailable,
             let thumbnailData = recommendation.contact.thumbnailImageData,
-            let uiImage = UIImage(data: thumbnailData)
-          {
+            let uiImage = UIImage(data: thumbnailData) {
             Image(uiImage: uiImage)
               .resizable()
               .aspectRatio(contentMode: .fill)
@@ -139,12 +137,12 @@ struct RecommendationRow: View {
       }
     }
   }
-  
+
   // Load current follow status
   private func loadFollowStatus() {
     guard !isLoadingFollowStatus else { return }
     isLoadingFollowStatus = true
-    
+
     Task {
       do {
         // Use the contact's identifier directly
@@ -153,10 +151,10 @@ struct RecommendationRow: View {
           return
         }
         print("Checking follow status for contact ID: \(organizationUserId)")
-        
+
         // Check follow status
         let response = try await socialService.isFollowingContact(followedId: organizationUserId)
-        
+
         // Update UI on main thread
         await MainActor.run {
           isFollowing = response.isFollowing
@@ -171,12 +169,12 @@ struct RecommendationRow: View {
       }
     }
   }
-  
+
   // Handle follow/unfollow action
   private func handleFollowAction() {
     guard !isPerformingFollowAction else { return }
     isPerformingFollowAction = true
-    
+
     Task {
       do {
         // Use the contact's identifier directly
@@ -185,7 +183,7 @@ struct RecommendationRow: View {
           return
         }
         print("Performing follow action with contact ID: \(organizationUserId)")
-        
+
         // Execute follow or unfollow
         if isFollowing {
           let result = try await socialService.unfollowContact(followedId: organizationUserId)
@@ -201,7 +199,7 @@ struct RecommendationRow: View {
             isFollowing = true
           }
         }
-        
+
         await MainActor.run {
           isPerformingFollowAction = false
         }
@@ -213,4 +211,4 @@ struct RecommendationRow: View {
       }
     }
   }
-} 
+}

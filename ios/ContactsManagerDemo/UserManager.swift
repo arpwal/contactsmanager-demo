@@ -33,7 +33,7 @@ class UserManager {
     let typeRawValue = UserDefaults.standard.integer(forKey: userTypeKey)
     return typeRawValue == 0 ? .email : .phoneNumber
   }
-  
+
   func setUserInfo(_ userInfo: UserInfo) {
     do {
       let userInfoData = try JSONEncoder().encode(userInfo)
@@ -68,7 +68,7 @@ class UserManager {
     UserDefaults.standard.removeObject(forKey: userIdKey)
     UserDefaults.standard.removeObject(forKey: userContactKey)
     UserDefaults.standard.removeObject(forKey: userTypeKey)
-    
+
     // Notify observers that user registration changed
     NotificationCenter.default.post(name: .userRegistrationChanged, object: nil)
   }

@@ -16,11 +16,11 @@ struct ContactsManagerDemoApp: App {
         // Uncomment the line below to enable background contact synchronization
          ContactsService.shared.enableBackgroundSync()
         // Note: The app works perfectly without background sync enabled!
-        
+
         // Force load UserManager
         _ = UserManager.shared
     }
-    
+
     var body: some Scene {
         WindowGroup {
             ContentView()

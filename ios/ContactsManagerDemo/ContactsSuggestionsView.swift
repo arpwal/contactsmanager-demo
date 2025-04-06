@@ -21,7 +21,7 @@ struct ContactsSuggestionsView: View {
   private let columns = [
     GridItem(.flexible()),
     GridItem(.flexible()),
-    GridItem(.flexible()),
+    GridItem(.flexible())
   ]
 
   var body: some View {
@@ -242,7 +242,7 @@ struct UserProfileCircle: View {
   @State private var showingActionSheet = false
   @State private var isFollowing = false
   @State private var isLoadingFollowStatus = false
-  
+
   // Social service for follow/unfollow functionality
   private let socialService = SocialService()
 
@@ -254,8 +254,7 @@ struct UserProfileCircle: View {
 
         if appUser.contact.imageDataAvailable,
           let thumbnailData = appUser.contact.thumbnailImageData,
-          let uiImage = UIImage(data: thumbnailData)
-        {
+          let uiImage = UIImage(data: thumbnailData) {
           Image(uiImage: uiImage)
             .resizable()
             .aspectRatio(contentMode: .fill)
@@ -282,7 +281,7 @@ struct UserProfileCircle: View {
       Button("Open Contact Card") {
         showingDetail = true
       }
-      
+
       if isLoadingFollowStatus {
         Button("Loading...") {
           // Disabled placeholder button
@@ -293,7 +292,7 @@ struct UserProfileCircle: View {
           toggleFollowStatus()
         }
       }
-      
+
       Button("Cancel", role: .cancel) {}
     } message: {
       Text(appUser.contact.displayName ?? "Contact")
@@ -302,12 +301,12 @@ struct UserProfileCircle: View {
       loadFollowStatus()
     }
   }
-  
+
   // Load current follow status
   private func loadFollowStatus() {
     guard !isLoadingFollowStatus else { return }
     isLoadingFollowStatus = true
-    
+
     Task {
       do {
         // Use the contact's identifier directly
@@ -315,10 +314,10 @@ struct UserProfileCircle: View {
           return
         }
         print("Checking follow status for organization user ID: \(organizationUserId)")
-        
+
         // Check follow status
         let response = try await socialService.isFollowingContact(followedId: organizationUserId)
-        
+
         // Update UI on main thread
         await MainActor.run {
           isFollowing = response.isFollowing
@@ -333,19 +332,19 @@ struct UserProfileCircle: View {
       }
     }
   }
-  
+
   // Toggle follow status (follow or unfollow)
   private func toggleFollowStatus() {
     Task {
       isLoadingFollowStatus = true
-      
+
       do {
         // Use the contact's identifier directly
         guard let organizationUserId = appUser.organizationUserId else {
           return
         }
         print("Performing follow action with contact ID: \(organizationUserId)")
-        
+
         if isFollowing {
           // Unfollow
           let result = try await socialService.unfollowContact(followedId: organizationUserId)
@@ -362,7 +361,7 @@ struct UserProfileCircle: View {
             isFollowing = true
           }
         }
-        
+
         await MainActor.run {
           isLoadingFollowStatus = false
         }

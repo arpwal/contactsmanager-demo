@@ -72,7 +72,7 @@ struct HomeFeedView: View {
             }
           }
         }
-        
+
         // Floating action button
         VStack {
           Spacer()
@@ -156,15 +156,15 @@ struct HomeFeedView: View {
       }
     }
   }
-  
+
   private func createEvent(text: String) async {
     guard !text.isEmpty else { return }
-    
+
     isPostingEvent = true
-    
+
     do {
       let service = SocialService()
-      
+
       // Create a simple post request with just the fields we need
       // The service layer will handle the missing fields
       let postRequest = CreateEventRequest(
@@ -173,22 +173,22 @@ struct HomeFeedView: View {
         description: "",
         isPublic: true
       )
-      
+
       // Use the service directly
       let result = try await service.createEvent(eventData: postRequest)
-      
+
       await MainActor.run {
         isPostingEvent = false
         error = nil
         showCreateEventSheet = false
       }
-      
+
       // After successful creation, refresh the feed
       await loadEvents()
-      
+
     } catch let createError {
       print("Error creating event: \(createError)")
-      
+
       await MainActor.run {
         // Get a user-friendly error message
         if let apiError = createError as? APIError {
@@ -205,7 +205,7 @@ struct HomeFeedView: View {
         } else {
           self.error = createError
         }
-        
+
         isPostingEvent = false
       }
     }
@@ -218,7 +218,7 @@ struct CreateEventSheet: View {
   @State private var eventText = ""
   let maxCharacterCount = 140
   let onPost: (String) -> Void
-  
+
   var body: some View {
     NavigationView {
       VStack {
@@ -231,7 +231,7 @@ struct CreateEventSheet: View {
             TextEditor(text: $eventText)
               .padding()
               .background(Color(UIColor.systemBackground))
-            
+
             if eventText.isEmpty {
               Text("What's happening?")
                 .foregroundColor(Color(UIColor.placeholderText))
@@ -239,7 +239,7 @@ struct CreateEventSheet: View {
                 .padding(.vertical, 24)
             }
           }
-          
+
           HStack {
             Text("\(eventText.count)/\(maxCharacterCount)")
               .foregroundColor(eventText.count > maxCharacterCount ? .red : .gray)

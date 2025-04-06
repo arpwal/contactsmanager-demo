@@ -13,7 +13,7 @@ import SwiftUI
 struct ContentView: View {
   @State private var isInitializing = false
   @State private var isRegistered = false
-  
+
   var body: some View {
     ZStack {
       if isRegistered {
@@ -23,7 +23,7 @@ struct ContentView: View {
             .tabItem {
               Label("Home", systemImage: "house.fill")
             }
-            
+
           FollowsView()
             .tabItem {
               Label("Profile", systemImage: "person.fill")
@@ -57,7 +57,7 @@ struct ContentView: View {
     .onReceive(NotificationCenter.default.publisher(for: .userRegistrationChanged)) { _ in
       // Re-check registration status when it changes
       isRegistered = UserManager.shared.isRegistered
-      
+
       // Re-initialize contact manager with new user ID
       if isRegistered && !ContactsService.shared.isInitialized {
         initializeContactsManager()

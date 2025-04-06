@@ -177,4 +177,4 @@ struct ContactsSearchView: View {
     let newStatus = ContactsService.shared.contactsAccessStatus
     contactsAccessStatus = newStatus
   }
-} 
+}

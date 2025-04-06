@@ -21,19 +21,19 @@ struct FollowsView: View {
   @State private var isLoadingFollowing = false
   @State private var isLoadingEvents = false
   @State private var error: Error?
-  
+
   // User profile data
   @State private var userName: String = ""
   @State private var userContact: String = ""
   @State private var userId: String = ""
-  
+
   // Event creation states
   @State private var showCreateEventSheet = false
   @State private var isPostingEvent = false
-  
+
   // For scroll coordination
   @State private var scrollOffset: CGFloat = 0
-  
+
   var body: some View {
     NavigationView {
       ZStack {
@@ -41,7 +41,7 @@ struct FollowsView: View {
         ScrollView {
           VStack(spacing: 0) {
             userProfileSection
-            
+
             // Content for selected tab
             VStack {
               if selectedTab == 0 {
@@ -64,7 +64,7 @@ struct FollowsView: View {
             await loadFollowing()
           }
         }
-        
+
         // Floating action button for creating events (only visible in Events tab)
         if selectedTab == 0 {
           floatingActionButton
@@ -95,9 +95,9 @@ struct FollowsView: View {
       }
     }
   }
-  
+
   // MARK: - UI Components
-  
+
   private var userProfileSection: some View {
     VStack(spacing: 16) {
       // Avatar
@@ -105,7 +105,7 @@ struct FollowsView: View {
         Circle()
           .fill(Color(.systemGray6))
           .frame(width: 100, height: 100)
-        
+
         Image(systemName: "person.circle.fill")
           .resizable()
           .aspectRatio(contentMode: .fit)
@@ -113,25 +113,25 @@ struct FollowsView: View {
           .foregroundColor(.gray)
       }
       .padding(.top, 20)
-      
+
       // User Information
       VStack(spacing: 8) {
         Text(userName.isEmpty ? "User Profile" : userName)
           .font(.title2)
           .fontWeight(.bold)
-        
+
         if !userContact.isEmpty {
           Text(userContact)
             .font(.subheadline)
             .foregroundColor(.secondary)
         }
-        
+
         Text("ID: \(userId)")
           .font(.caption)
           .foregroundColor(.secondary)
       }
       .padding(.horizontal)
-      
+
       // Tab Selector
       Picker("", selection: $selectedTab) {
         Text("Events").tag(0)
@@ -145,7 +145,7 @@ struct FollowsView: View {
     .padding(.bottom, 8)
     .background(Color(.systemBackground))
   }
-  
+
   private var floatingActionButton: some View {
     VStack {
       Spacer()
@@ -167,7 +167,7 @@ struct FollowsView: View {
       }
     }
   }
-  
+
   // Events content
   private var eventsContent: some View {
     Group {
@@ -213,7 +213,7 @@ struct FollowsView: View {
       }
     }
   }
-  
+
   // Followers content
   private var followersContent: some View {
     Group {
@@ -263,7 +263,7 @@ struct FollowsView: View {
       }
     }
   }
-  
+
   // Following content
   private var followingContent: some View {
     Group {
@@ -314,20 +314,20 @@ struct FollowsView: View {
       }
     }
   }
-  
+
   // MARK: - Data Loading
-  
+
   // Load user profile data from UserManager
   private func loadUserProfile() {
     // Get user data from UserManager
     if let contactValue = UserManager.shared.getUserContact() {
       userContact = contactValue
-      
+
       // Determine if it's an email or phone number
       let type = UserManager.shared.getUserType()
       userName = type == .email ? "Email User" : "Phone User"
     }
-    
+
     // Get the user ID
     if let id = UserManager.shared.getUserId() {
       userId = id
@@ -335,18 +335,18 @@ struct FollowsView: View {
       userId = "Unknown ID"
     }
   }
-  
+
   // Load events created by the current user
   private func loadEvents() async {
     guard !isLoadingEvents else { return }
-    
+
     isLoadingEvents = true
     error = nil
-    
+
     do {
       let service = SocialService()
       let result = try await service.getContactEvents()
-      
+
       await MainActor.run {
         self.events = result.items
         self.isLoadingEvents = false
@@ -358,17 +358,17 @@ struct FollowsView: View {
       }
     }
   }
-  
+
   private func loadFollowers() async {
     guard !isLoadingFollowers else { return }
-    
+
     isLoadingFollowers = true
     error = nil
-    
+
     do {
       let service = SocialService()
       let result = try await service.getFollowers()
-      
+
       await MainActor.run {
         self.followers = result.items
         self.isLoadingFollowers = false
@@ -380,17 +380,17 @@ struct FollowsView: View {
       }
     }
   }
-  
+
   private func loadFollowing() async {
     guard !isLoadingFollowing else { return }
-    
+
     isLoadingFollowing = true
     error = nil
-    
+
     do {
       let service = SocialService()
       let result = try await service.getFollowing()
-      
+
       await MainActor.run {
         self.following = result.items
         self.isLoadingFollowing = false
@@ -402,16 +402,16 @@ struct FollowsView: View {
       }
     }
   }
-  
+
   // Create a new event
   private func createEvent(text: String) async {
     guard !text.isEmpty else { return }
-    
+
     isPostingEvent = true
-    
+
     do {
       let service = SocialService()
-      
+
       // Create a simple post request with just the fields we need
       let postRequest = CreateEventRequest(
         eventType: "post",
@@ -419,22 +419,22 @@ struct FollowsView: View {
         description: "",
         isPublic: true
       )
-      
+
       // Use the service to create the event
       let result = try await service.createEvent(eventData: postRequest)
-      
+
       await MainActor.run {
         isPostingEvent = false
         error = nil
         showCreateEventSheet = false
       }
-      
+
       // After successful creation, refresh the events
       await loadEvents()
-      
+
     } catch let createError {
       print("Error creating event: \(createError)")
-      
+
       await MainActor.run {
         // Get a user-friendly error message
         if let apiError = createError as? APIError {
@@ -451,7 +451,7 @@ struct FollowsView: View {
         } else {
           self.error = createError
         }
-        
+
         isPostingEvent = false
       }
     }
@@ -462,7 +462,7 @@ struct FollowsView: View {
 struct FollowContactRow: View {
   let contact: CanonicalContact?
   let localContact: Contact?
-  
+
   var body: some View {
     HStack(spacing: 12) {
       if let avatarUrl = contact?.avatarUrl, !avatarUrl.isEmpty {
@@ -483,13 +483,13 @@ struct FollowContactRow: View {
           .frame(width: 40, height: 40)
           .foregroundColor(.gray)
       }
-      
+
       VStack(alignment: .leading, spacing: 4) {
         // Show local contact name if available, otherwise use server data
         if let localContact = localContact {
           Text(localContact.displayName ?? "Unknown Contact")
             .font(.headline)
-          
+
           if let email = localContact.emailAddresses.first?.value, !email.isEmpty {
             Text(email)
               .font(.subheadline)
@@ -507,7 +507,7 @@ struct FollowContactRow: View {
         } else {
           Text(contact?.fullName ?? "Unknown Contact")
             .font(.headline)
-          
+
           if let email = contact?.email, !email.isEmpty {
             Text(email)
               .font(.subheadline)
@@ -515,7 +515,7 @@ struct FollowContactRow: View {
           }
         }
       }
-      
+
       Spacer()
     }
   }
@@ -523,4 +523,4 @@ struct FollowContactRow: View {
 
 #Preview {
   FollowsView()
-} 
+}

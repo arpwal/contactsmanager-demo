@@ -14,15 +14,13 @@ class ConfigurationManager {
     // 1. Try to get from Info.plist
     if let value = Bundle.main.infoDictionary?["API_KEY"] as? String,
       !value.isEmpty,
-      !value.contains("$(")
-    {
+      !value.contains("$(") {
       return value
     }
 
     // 2. Try environment variables
     if let envValue = ProcessInfo.processInfo.environment["API_KEY"],
-      !envValue.isEmpty
-    {
+      !envValue.isEmpty {
       return envValue
     }
 
