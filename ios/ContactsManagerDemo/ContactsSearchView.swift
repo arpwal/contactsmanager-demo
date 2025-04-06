@@ -63,8 +63,8 @@ struct ContactsSearchView: View {
         if contactsAccessStatus == .authorized {
           Button(action: showContactPicker) {
             HStack {
-              Image(systemName: "person.crop.circle.badge.plus")
-              Text("Select Contacts")
+              Image(systemName: "magnifyingglass")
+              Text("Search Contacts")
             }
             .font(.headline)
             .padding()
